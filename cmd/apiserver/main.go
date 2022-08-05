@@ -26,9 +26,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	s := apiserver.New(config)
 	fmt.Printf("ConfigPath = %s, Addr = %s \n", configPath, config.Store.Host+config.Store.Port)
-	if err := s.Start(); err != nil {
+
+	if err := apiserver.Start(config); err != nil {
 		log.Fatal(err)
 	}
 }
