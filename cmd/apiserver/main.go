@@ -1,0 +1,34 @@
+package main
+
+import (
+	"flag"
+	"fmt"
+	"github.com/BurntSushi/toml"
+	"log"
+	"rest-redis-app/internal/app/apiserver"
+)
+
+var (
+	configPath string
+)
+
+func init() {
+	flag.StringVar(&configPath, "config-path", "configs/apiserver.toml", "path to config file")
+}
+
+func main() {
+	flag.Parse()
+
+	config := apiserver.NewConfig()
+	_, err := toml.DecodeFile(configPath, config)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	s := apiserver.New(config)
+	fmt.Printf("ConfigPath = %s, Addr = %s \n", configPath, config.Store.Host+config.Store.Port)
+	if err := s.Start(); err != nil {
+		log.Fatal(err)
+	}
+}
