@@ -36,21 +36,26 @@ func (s *Store) Open() error {
 	return nil
 }
 
-func (s *Store) Inc(key string) (string, error) {
+func (s *Store) IncrementKeyByValue(key string, val int) (int, error) {
 
 	oldValue, err := s.db.Get(key).Int()
 
 	if err != nil {
-		return "", err
+		return oldValue, err
 	}
 
-	_, err = s.db.Set(key, oldValue+1, 0).Result()
+	_, err = s.db.Set(key, oldValue+val, 0).Result()
 
 	if err != nil {
-		return "", err
+		return oldValue, err
 	}
 
-	return s.db.Get(key).Val(), nil
+	result, err := s.db.Get(key).Int()
+	if err != nil {
+		return oldValue, err
+	}
+
+	return result, nil
 }
 
 func (s *Store) Close() error {
