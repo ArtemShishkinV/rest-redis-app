@@ -2,7 +2,6 @@ package apiserver
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"net/http"
@@ -90,15 +89,10 @@ func (s *server) handleIncrementKey(w http.ResponseWriter, r *http.Request) {
 
 	val, _ := s.store.Repository().IncrementKeyByValue(key.Key, key.Val)
 
-	//response := make(map[string]int)
-	//response[key.Key] = val
+	response := make(map[string]interface{})
+	response[key.Key] = val
 
-	//marshal, err := json.Marshal(response)
-	//if err != nil {
-	//	utils.Respond(w, utils.Message(false, "Invalid response"))
-	//	return
-	//}
-	fmt.Printf("%s = %d", key.Key, val)
+	utils.Respond(w, response)
 }
 
 func (s *server) handleMakeSign(w http.ResponseWriter, r *http.Request) {
