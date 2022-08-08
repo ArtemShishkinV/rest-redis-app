@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
+	"io"
 	"net/http"
 	"rest-redis-app/internal/app/apiserver/http/dto"
 	"rest-redis-app/internal/app/store"
 	"rest-redis-app/utils"
+	"strings"
 )
 
 type server struct {
@@ -32,22 +34,6 @@ func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.router.ServeHTTP(w, r)
 }
 
-//func (s *server) Start() error {
-//	if err := s.configureLogger(); err != nil {
-//		return err
-//	}
-//
-//	s.configureRouter()
-//
-//	if err := s.configureStore(); err != nil {
-//		return err
-//	}
-//
-//	s.logger.Info("starting api server...")
-//
-//	return http.ListenAndServe(s.config.BindAddr, s.router)
-//}
-
 func (s *server) configureLogger() error {
 	level, err := logrus.ParseLevel("debug")
 	if err != nil {
@@ -64,41 +50,81 @@ func (s *server) configureRouter() {
 	s.router.HandleFunc("/test3", s.handleMultiplication)
 }
 
-//func (s *server) configureStore() error {
-//	st := store.newServer(s.config.Store)
-//	if err := st.Open(); err != nil {
-//		return err
-//	}
-//
-//	s.store = st
-//
-//	return nil
-//}
-
 func (s *server) handleIncrementKey(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.Path[1:]
-	key := &dto.IncrementKeyRequestDto{}
+	s.logger.Info("in the handler, " + path)
 
-	err := json.NewDecoder(r.Body).Decode(key)
+	requestDto := &dto.IncrementKeyRequestDto{}
+
+	err := json.NewDecoder(r.Body).Decode(requestDto)
 	if err != nil {
 		utils.Respond(w, utils.Message(false, "Invalid request"))
 		return
 	}
 
-	s.logger.Info("in the handler, " + path)
-
-	val, _ := s.store.Repository().IncrementKeyByValue(key.Key, key.Val)
+	val, _ := s.store.Repository().IncrementKeyByValue(requestDto.Key, requestDto.Val)
 
 	response := make(map[string]interface{})
-	response[key.Key] = val
+	response[requestDto.Key] = val
 
 	utils.Respond(w, response)
 }
 
 func (s *server) handleMakeSign(w http.ResponseWriter, r *http.Request) {
+	path := r.URL.Path[1:]
+	s.logger.Info("in the handler, " + path)
 
+	requestDto := &dto.ComputeHmacDto{}
+	err := json.NewDecoder(r.Body).Decode(requestDto)
+	if err != nil {
+		utils.Respond(w, utils.Message(false, "Invalid request"))
+		return
+	}
+
+	hmac512 := utils.ComputeHmac512(requestDto.S, requestDto.Key)
+
+	response := make(map[string]interface{})
+	response["hmac512"] = hmac512
+
+	utils.Respond(w, response)
 }
 
-func (s *server) handleMultiplication(ц http.ResponseWriter, r *http.Request) {
+func (s *server) handleMultiplication(w http.ResponseWriter, r *http.Request) {
+	path := r.URL.Path[1:]
+	s.logger.Info("in the handler, " + path)
 
+	requestDto := &dto.MultiplicationRequestDto{}
+
+	bytes, err := io.ReadAll(r.Body)
+	if err != nil {
+		utils.Respond(w, utils.Message(false, "Invalid request"))
+		return
+	}
+
+	err = json.Unmarshal(bytes, &requestDto.Multipliers)
+	if err != nil {
+		utils.Respond(w, utils.Message(false, "Invalid request"))
+		return
+	}
+
+	if err != nil {
+		utils.Respond(w, utils.Message(false, "Invalid request"))
+		return
+	}
+
+	response := make(map[string]interface{})
+	response["result"] = generateStringSendToApp(requestDto)
+
+	utils.Respond(w, response)
+}
+
+func generateStringSendToApp(m *dto.MultiplicationRequestDto) string {
+	EOF := "\r\n"
+	result := ""
+
+	for _, item := range m.Multipliers {
+		result += strings.Join([]string{item.A, item.B}, ",") + EOF
+	}
+
+	return result + EOF
 }
