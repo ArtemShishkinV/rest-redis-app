@@ -2,13 +2,17 @@ package apiserver
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"io"
+	"net"
 	"net/http"
+	"regexp"
 	"rest-redis-app/internal/app/apiserver/http/dto"
 	"rest-redis-app/internal/app/store"
 	"rest-redis-app/utils"
+	"strconv"
 	"strings"
 )
 
@@ -112,13 +116,40 @@ func (s *server) handleMultiplication(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := make(map[string]interface{})
-	response["result"] = generateStringSendToApp(requestDto)
+	responseString := getResultMultiplication(generateStringToSendRequest(requestDto))
+
+	response := getResultFromStringResponseTcp(responseString, requestDto)
 
 	utils.Respond(w, response)
 }
 
-func generateStringSendToApp(m *dto.MultiplicationRequestDto) string {
+func getResultMultiplication(data string) string {
+	return sendTcpRequest("127.0.0.1:4545", data)
+}
+
+func sendTcpRequest(address string, message string) string {
+	network := "tcp"
+
+	conn, err := net.Dial(network, address)
+
+	if err != nil {
+		fmt.Println(err)
+		return ""
+	}
+	defer conn.Close()
+
+	if n, err := conn.Write([]byte(message)); n == 0 || err != nil {
+		fmt.Println(err)
+		return ""
+	}
+
+	buff := make([]byte, 1024*4)
+	n, err := conn.Read(buff)
+
+	return string(buff[0:n])
+}
+
+func generateStringToSendRequest(m *dto.MultiplicationRequestDto) string {
 	EOF := "\r\n"
 	result := ""
 
@@ -127,4 +158,29 @@ func generateStringSendToApp(m *dto.MultiplicationRequestDto) string {
 	}
 
 	return result + EOF
+}
+
+func getResultFromStringResponseTcp(data string, m *dto.MultiplicationRequestDto) map[string]interface{} {
+	response := make(map[string]interface{})
+	results := getNumbersFromRequest(data)
+
+	for index, item := range results {
+		response[m.Multipliers[index].Key] = item
+	}
+
+	return response
+}
+
+func getNumbersFromRequest(data string) []int {
+	var numbers []int
+
+	re := regexp.MustCompile("-?\\d+")
+	matchNumbers := re.FindAllString(data, -1)
+
+	for _, element := range matchNumbers {
+		i, _ := strconv.Atoi(element)
+		numbers = append(numbers, i)
+	}
+
+	return numbers
 }
