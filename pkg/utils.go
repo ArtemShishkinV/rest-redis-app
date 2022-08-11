@@ -1,10 +1,12 @@
-package utils
+package pkg
 
 import (
 	"crypto/hmac"
 	"crypto/sha512"
 	"encoding/json"
 	"net/http"
+	"regexp"
+	"strconv"
 )
 
 func Message(status bool, message string) map[string]interface{} {
@@ -23,4 +25,18 @@ func ComputeHmac512(message string, secret string) string {
 	h.Write([]byte(message))
 
 	return string(h.Sum(nil))
+}
+
+func GetNumbersFromString(data string) []int {
+	var numbers []int
+
+	re := regexp.MustCompile("-?\\d+")
+	matchNumbers := re.FindAllString(data, -1)
+
+	for _, element := range matchNumbers {
+		i, _ := strconv.Atoi(element)
+		numbers = append(numbers, i)
+	}
+
+	return numbers
 }

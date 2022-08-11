@@ -23,13 +23,11 @@ func Start(config *Config) error {
 func newDB(host string, port string) (*redis.Client, error) {
 	db := redis.NewClient(&redis.Options{
 		Addr:     host + port,
-		Password: "", // no password set
-		DB:       0,  // use default DB
+		Password: "",
+		DB:       0,
 	})
 
-	_, err := db.Ping().Result()
-
-	if err != nil {
+	if _, err := db.Ping().Result(); err != nil {
 		return nil, err
 	}
 

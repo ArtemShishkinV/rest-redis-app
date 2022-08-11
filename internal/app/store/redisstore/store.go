@@ -35,20 +35,3 @@ func (s *Store) Close() error {
 	}
 	return nil
 }
-
-//func (s *Store) Dec(key string) (interface{}, interface{}) {
-//
-//	oldValue, err := s.db.Get(key).Int()
-//
-//	if err != nil {
-//		return "", err
-//	}
-//
-//	_, err = s.db.Set(key, oldValue-1, 0).Result()
-//
-//	if err != nil {
-//		return "", err
-//	}
-//
-//	return s.db.Get(key).Val(), nil
-//}
