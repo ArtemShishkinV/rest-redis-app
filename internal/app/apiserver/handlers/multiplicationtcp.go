@@ -12,6 +12,8 @@ import (
 	"strings"
 )
 
+const TcpAddr = "127.0.0.1:4545"
+
 type multiplicationTcpHandler struct{}
 
 func NewMultiplicationTcpHandler() Handler {
@@ -25,26 +27,35 @@ func (h *multiplicationTcpHandler) Register(router *mux.Router) {
 func (h *multiplicationTcpHandler) handleMultiplication(w http.ResponseWriter, r *http.Request) {
 	requestDto := &dto3.MultiplicationRequestDto{}
 
-	bytes, err := io.ReadAll(r.Body)
-	if err != nil {
+	if err := readDataFromRequest(r, requestDto); err != nil {
 		pkg.Respond(w, pkg.Message(false, "Invalid request"))
 		return
 	}
 
-	if err = json.Unmarshal(bytes, &requestDto.Multipliers); err != nil {
-		pkg.Respond(w, pkg.Message(false, "Invalid request"))
-		return
-	}
-
-	responseString := getResultMultiplication(generateStringToSendRequest(requestDto))
-
-	response := getResultFromStringResponseTcp(responseString, requestDto)
+	response := getResultMultiplication(requestDto)
 
 	pkg.Respond(w, response)
 }
 
-func getResultMultiplication(data string) string {
-	return sendTcpRequest("127.0.0.1:4545", data)
+func readDataFromRequest(r *http.Request, dto *dto3.MultiplicationRequestDto) error {
+	bytes, err := io.ReadAll(r.Body)
+
+	if err != nil {
+		return err
+	}
+
+	if err = json.Unmarshal(bytes, &dto.Multipliers); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func getResultMultiplication(data *dto3.MultiplicationRequestDto) map[string]interface{} {
+	requestString := generateStringToSendRequest(data)
+	tcpResponse := sendTcpRequest(TcpAddr, requestString)
+
+	return getResultFromStringTcpResponse(tcpResponse, data)
 }
 
 func sendTcpRequest(address string, message string) string {
@@ -70,17 +81,17 @@ func sendTcpRequest(address string, message string) string {
 }
 
 func generateStringToSendRequest(m *dto3.MultiplicationRequestDto) string {
-	EOF := "\r\n"
+	EOL := "\r\n"
 	result := ""
 
 	for _, item := range m.Multipliers {
-		result += strings.Join([]string{item.A, item.B}, ",") + EOF
+		result += strings.Join([]string{item.A, item.B}, ",") + EOL
 	}
 
-	return result + EOF
+	return result + EOL
 }
 
-func getResultFromStringResponseTcp(data string, m *dto3.MultiplicationRequestDto) map[string]interface{} {
+func getResultFromStringTcpResponse(data string, m *dto3.MultiplicationRequestDto) map[string]interface{} {
 	response := make(map[string]interface{})
 	results := pkg.GetNumbersFromString(data)
 
