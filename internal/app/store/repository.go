@@ -1,5 +1,6 @@
 package store
 
 type Repository interface {
-	IncrementKeyByValue(key string, val int) (int, error)
+	FindValue(key string) (int, error)
+	UpdateValue(key string, val int) error
 }

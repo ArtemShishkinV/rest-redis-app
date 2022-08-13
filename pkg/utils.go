@@ -5,8 +5,8 @@ import (
 	"crypto/sha512"
 	"encoding/json"
 	"net/http"
-	"regexp"
 	"strconv"
+	"strings"
 )
 
 func Message(status bool, message string) map[string]interface{} {
@@ -27,16 +27,23 @@ func ComputeHmac512(message string, secret string) string {
 	return string(h.Sum(nil))
 }
 
-func GetNumbersFromString(data string) []int {
+func GetNumbersFromString(data string) ([]int, error) {
 	var numbers []int
+	var matchNumbers []string
 
-	re := regexp.MustCompile("-?\\d+")
-	matchNumbers := re.FindAllString(data, -1)
-
-	for _, element := range matchNumbers {
-		i, _ := strconv.Atoi(element)
-		numbers = append(numbers, i)
+	for _, s := range strings.Split(data, "\r\n") {
+		matchNumbers = append(matchNumbers, strings.Split(s, ",")...)
 	}
 
-	return numbers
+	for _, element := range matchNumbers {
+		if element != "" {
+			i, err := strconv.Atoi(element)
+			if err != nil {
+				return nil, err
+			}
+			numbers = append(numbers, i)
+		}
+	}
+
+	return numbers, nil
 }

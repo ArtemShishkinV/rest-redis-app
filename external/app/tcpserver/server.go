@@ -62,7 +62,11 @@ func readStringFromRequest(conn net.Conn) (string, error) {
 }
 
 func getResponse(data string) string {
-	multipliers := pkg.GetNumbersFromString(data)
+	multipliers, err := pkg.GetNumbersFromString(data)
+
+	if len(multipliers)%2 != 0 || err != nil {
+		return "Invalid request data"
+	}
 
 	var results []string
 

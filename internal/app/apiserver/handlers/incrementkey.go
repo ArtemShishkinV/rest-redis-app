@@ -32,10 +32,26 @@ func (h *incrementKeyHandler) handleIncrementKey(w http.ResponseWriter, r *http.
 		return
 	}
 
-	val, _ := h.repository.IncrementKeyByValue(requestDto.Key, requestDto.Val)
+	val, _ := h.IncrementKeyByValue(requestDto.Key, requestDto.Val)
 
 	response := make(map[string]interface{})
 	response[requestDto.Key] = val
 
 	pkg.Respond(w, response)
+}
+
+func (h *incrementKeyHandler) IncrementKeyByValue(key string, val int) (int, error) {
+	oldValue, err := h.repository.FindValue(key)
+
+	if err != nil {
+		return 0, err
+	}
+
+	newValue := oldValue + val
+
+	if err = h.repository.UpdateValue(key, newValue); err != nil {
+		return 0, err
+	}
+
+	return newValue, nil
 }

@@ -34,6 +34,11 @@ func (h *multiplicationTcpHandler) handleMultiplication(w http.ResponseWriter, r
 
 	response := getResultMultiplication(requestDto)
 
+	if len(response) == 0 {
+		pkg.Respond(w, pkg.Message(false, "Invalid request"))
+		return
+	}
+
 	pkg.Respond(w, response)
 }
 
@@ -93,7 +98,13 @@ func generateStringToSendRequest(m *dto3.MultiplicationRequestDto) string {
 
 func getResultFromStringTcpResponse(data string, m *dto3.MultiplicationRequestDto) map[string]interface{} {
 	response := make(map[string]interface{})
-	results := pkg.GetNumbersFromString(data)
+	results, err := pkg.GetNumbersFromString(data)
+
+	fmt.Println(results)
+
+	if err != nil || len(results) == 0 {
+		return response
+	}
 
 	for index, item := range results {
 		response[m.Multipliers[index].Key] = item
