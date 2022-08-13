@@ -1,0 +1,20 @@
+# 1. Specify the version for docker-compose.yml
+version: "3.8"
+
+# 2. Generate the serivces needed (redis)
+services:
+  redis:
+    container_name: "redis"
+    image: redis:alpine
+    restart: always
+    ports:
+      - "6379:6379"
+
+  go:
+    container_name: "rest-redis-api"
+    build:
+      context: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      - redis
