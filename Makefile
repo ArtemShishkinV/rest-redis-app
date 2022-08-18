@@ -1,9 +1,5 @@
-.PHONY: build
 build:
-	go build -v ./cmd/apiserver
+	docker-compose build todo-app
 
-.PHONY: test
-test:
-	go test -v -race -timeout 30s ./ ...
-
-.DEFAULT_GOAL := build
+run:
+	docker-compose up todo-app

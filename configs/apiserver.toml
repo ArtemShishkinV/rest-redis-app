@@ -1,3 +1,2 @@
-bind_addr = ":8081"
+bind_addr = ":8080"
 log_level = "debug"
-host_db = "redis"

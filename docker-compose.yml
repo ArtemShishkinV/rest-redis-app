@@ -10,11 +10,25 @@ services:
     ports:
       - "6379:6379"
 
+  server:
+    container_name: "server"
+    build:
+      context: ./external/app/tcpserver/
+      dockerfile: Dockerfile
+    ports:
+      - "4545:4545"
+
   go:
     container_name: "rest-redis-api"
     build:
       context: .
+    environment:
+      - host=redis
+      - port=:6379
     ports:
       - "8080:8080"
     depends_on:
       - redis
+      - server
+
+

@@ -5,15 +5,15 @@ import (
 	"fmt"
 	"io"
 	"net"
-	"rest-redis-app/pkg"
 	"strconv"
 	"strings"
+	"tcpserver/pkg"
 )
 
 const EOL = "\r\n"
 
 func main() {
-	listener, err := net.Listen("tcp", ":4545")
+	listener, err := net.Listen("tcp", "server:4545")
 
 	if err != nil {
 		fmt.Println(err)

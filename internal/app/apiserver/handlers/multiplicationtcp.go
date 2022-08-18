@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-const TcpAddr = "127.0.0.1:4545"
+const TcpAddr = "server:4545"
 
 type multiplicationTcpHandler struct{}
 
