@@ -3,6 +3,7 @@ package pkg
 import (
 	"crypto/hmac"
 	"crypto/sha512"
+	"encoding/hex"
 	"encoding/json"
 	"net/http"
 	"strconv"
@@ -24,7 +25,8 @@ func ComputeHmac512(message string, secret string) string {
 	h := hmac.New(sha512.New, key)
 	h.Write([]byte(message))
 
-	return string(h.Sum(nil))
+	sha := hex.EncodeToString(h.Sum(nil))
+	return sha
 }
 
 func GetNumbersFromString(data string) ([]int, error) {

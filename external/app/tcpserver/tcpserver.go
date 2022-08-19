@@ -38,7 +38,7 @@ func main() {
 func handleConnection(conn net.Conn) {
 	defer conn.Close()
 
-	response, err := readStringFromRequest(conn)
+	response, err := readRequest(conn)
 	if err != nil {
 		_, err = conn.Write([]byte("Invalid request data"))
 	}
@@ -48,7 +48,7 @@ func handleConnection(conn net.Conn) {
 	_, err = conn.Write([]byte(response + EOL))
 }
 
-func readStringFromRequest(conn net.Conn) (string, error) {
+func readRequest(conn net.Conn) (string, error) {
 	reader := bufio.NewReader(conn)
 	result := ""
 
