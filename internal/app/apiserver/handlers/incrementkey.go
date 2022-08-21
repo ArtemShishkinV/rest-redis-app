@@ -41,7 +41,7 @@ func (h *incrementKeyHandler) handleIncrementKey(w http.ResponseWriter, r *http.
 }
 
 func (h *incrementKeyHandler) IncrementKeyByValue(key string, val int) (int, error) {
-	oldValue, _ := h.repository.FindValue(key)
+	oldValue, _ := h.repository.FindIntValue(key)
 	newValue := oldValue + val
 
 	if err := h.repository.UpdateValue(key, newValue); err != nil {

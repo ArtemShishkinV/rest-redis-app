@@ -6,7 +6,7 @@ type RedisRepository struct {
 	store *Store
 }
 
-func (r *RedisRepository) FindValue(key string) (int, error) {
+func (r *RedisRepository) FindIntValue(key string) (int, error) {
 	value, err := r.store.db.Get(key).Int()
 
 	if err != nil {
